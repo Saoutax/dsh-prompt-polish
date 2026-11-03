@@ -102,6 +102,39 @@ describe('rebuildDraft', () => {
         };
         expect(rebuildDraft(original, '  ')).toBeUndefined();
     });
+
+    it('appends a chip whose offset falls inside the command prefix instead of dropping it', () => {
+        // This chip's offset (0) is inside the 6-character '/plan ' prefix, so it
+        // has no prose coordinate; it must survive by the same append-at-the-end
+        // path lost chips take, not vanish.
+        const chip = ref({ clipboardText: '@notes.md', offset: 0 });
+        const original: DraftSnapshot = {
+            text: '/plan read the thing',
+            references: [chip],
+            command: { token: '/plan ' },
+        };
+        const rewritten = rebuildDraft(original, 'Read the item thoroughly');
+        expect(rewritten?.text).toBe('/plan Read the item thoroughly @notes.md');
+        expect(rewritten?.references).toEqual([
+            expect.objectContaining({ clipboardText: '@notes.md', offset: 31 }),
+        ]);
+    });
+
+    it('places chips sharing the same clipboard text by document order, not array order', () => {
+        // The array lists the later-offset chip first; place() must still match
+        // it to the later occurrence because chipsOf sorts by offset first.
+        const later = ref({ clipboardText: '@a.md', offset: 20, label: 'later' });
+        const earlier = ref({ clipboardText: '@a.md', offset: 0, label: 'earlier' });
+        const original: DraftSnapshot = {
+            text: '@a.md and also @a.md',
+            references: [later, earlier],
+        };
+        const rewritten = rebuildDraft(original, '@a.md plus @a.md combined');
+        expect(rewritten?.references).toEqual([
+            expect.objectContaining({ label: 'earlier', offset: 0 }),
+            expect.objectContaining({ label: 'later', offset: 11 }),
+        ]);
+    });
 });
 
 describe('canPolish', () => {

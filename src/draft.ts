@@ -176,11 +176,15 @@ const withoutOverlaps = (
 
 /**
  * Reference-bearing chips of a draft, in document order.
+ *
+ * `references` is sorted by offset first: `place`'s forward-moving cursor
+ * depends on seeing chips in document order, and nothing in `DraftSnapshot`'s
+ * contract guarantees the caller already supplied them that way.
  * @param draft - the composer document.
- * @returns its chips as occurrences with clipboard text.
+ * @returns its chips as occurrences with clipboard text, ascending by offset.
  */
 const chipsOf = (draft: DraftSnapshot): Occurrence[] => {
-    return draft.references.map((reference, index) => ({
+    return sortByOffset(draft.references).map((reference, index) => ({
         occurrenceId: index,
         source: reference.source,
         ref: reference.ref,
@@ -291,7 +295,13 @@ const rebuildDraft = (original: DraftSnapshot, polished: string): DraftSnapshot 
 
     // Work in prose coordinates, then shift the rewritten document back under
     // the command chip: its claim and the chips' absolute offsets both survive.
+    // A reference whose offset falls inside the prefix itself has no prose
+    // coordinate to carry through rebuildProse, so it is appended after the
+    // rewrite instead of being dropped - the same "nothing disappears
+    // silently" guarantee rebuildProse gives chips whose text moved out of
+    // range.
     const shift = prefix.length;
+    const insidePrefix = original.references.filter(reference => reference.offset < shift);
     const body: DraftSnapshot = {
         text: original.text.slice(shift),
         references: original.references
@@ -302,12 +312,26 @@ const rebuildDraft = (original: DraftSnapshot, polished: string): DraftSnapshot 
     if (rebuilt === undefined) {
         return undefined;
     }
+
+    const pieces: string[] = [rebuilt.text];
+    const references: DraftReference[] = rebuilt.references.map(reference => ({
+        ...reference,
+        offset: reference.offset + shift,
+    }));
+    let cursor = rebuilt.text.length + shift;
+    for (const reference of insidePrefix) {
+        if (reference.clipboardText === '') {
+            continue;
+        }
+        pieces.push(' ', reference.clipboardText);
+        cursor += 1;
+        references.push({ ...reference, offset: cursor, length: reference.clipboardText.length });
+        cursor += reference.clipboardText.length;
+    }
+
     return {
-        text: prefix + rebuilt.text,
-        references: rebuilt.references.map(reference => ({
-            ...reference,
-            offset: reference.offset + shift,
-        })),
+        text: prefix + pieces.join(''),
+        references,
         command: { token: prefix },
     };
 };
