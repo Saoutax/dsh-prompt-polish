@@ -71,36 +71,10 @@ pnpm run lint      # 语法 lint
 
 ## 发布
 
-仓库在 `.github/workflows/` 下有两套工作流。
-
-`ci.yml` 在每次发起 PR 和每次推送到 `main` 时校验：按已提交的 lockfile 以
-`--frozen-lockfile` 安装，然后执行 `pnpm run check`（oxfmt、oxlint type-aware、
-两个 `tsc` 项目、esbuild 打包）。它不做任何发布或写操作。
-
-`release.yml` 在推送到 `main` 时触发，含两个 job：
-
-1. **版本与打标** —— [release-please](https://github.com/googleapis/release-please)
-   维持一个常驻的 release PR，累积自上个 tag 以来合入的 Conventional Commits，
-   给出下一个版本号与 `CHANGELOG.md` 条目。合并该 PR 才会创建 `vX.Y.Z` tag 与
-   GitHub Release。
-2. **构建并挂载插件包** —— 仅在实际产生了新 release 时运行。它检出该 tag、重新
-   构建产物（`lib/` 是生成物且被 git 忽略，检出后并不存在）、执行 `pnpm pack`，
-   把得到的 `.tgz` 上传到该 Release。这个 tarball 就是 DSH bundle 的便携安装目标，
-   可直接交给 harness 的插件管理器。
-
-版本从 `0.1.0` 开始：`release-please-config.json` 里的 `initial-version` 钉住首次
-版本，否则在没有历史 tag 的情况下 release-please 会默认以 `1.0.0` 起步。
-`.release-please-manifest.json` 在首次发布前保持 `0.0.0` —— release-please 把这个
-哨兵值当作"尚未发布"，转而采用 `initial-version`。此后主版本仍为 `0` 期间，`feat`
-递增次版本、`fix` 递增补丁版本（`bump-minor-pre-major`）。
-
-提交信息需遵循 [Conventional Commits](https://www.conventionalcommits.org/)，
-release-please 才能识别；`ci`、`chore`、`test` 不进 changelog。
-
-两套工作流默认使用 `GITHUB_TOKEN`，无需任何 secret。但用该 token 开出的 PR 不会
-再触发其他工作流，因此 release PR 上不会出现 CI 运行记录。如需让 release PR 也跑
-CI，添加 `RELEASE_PLEASE_TOKEN` 仓库 secret（一个 personal access token），工作流
-会自动改用它。
+每次推送到 `main` 都会跑测试与构建校验；合并后由
+[release-please](https://github.com/googleapis/release-please) 自动计算版本号、更新
+`CHANGELOG.md` 并发布到 npm 与 GitHub Release，无需手动操作。提交信息需遵循
+[Conventional Commits](https://www.conventionalcommits.org/)。
 
 ## 图标
 
