@@ -139,6 +139,10 @@ export const ConfigPage = (
         });
         const [catalogLoading, setCatalogLoading] = React.useState(true);
         const [typing, setTyping] = React.useState<string | undefined>(undefined);
+        // Guards the instructions textarea's save-on-blur continuation: once
+        // this flips to false, a still-settling save must not touch state on a
+        // component that already unmounted.
+        const aliveRef = React.useRef(true);
 
         // The form is an external store: subscribe once, follow every Host
         // acceptance for as long as the page stays mounted.
@@ -148,6 +152,13 @@ export const ConfigPage = (
                 setSnapshot(form.getSnapshot());
             });
         }, [form]);
+
+        React.useEffect(
+            () => () => {
+                aliveRef.current = false;
+            },
+            [],
+        );
 
         // The catalog is deployment-global and does not change with the draft,
         // so it is fetched once per mount rather than per render.
@@ -179,16 +190,23 @@ export const ConfigPage = (
             return createElement('p', { className: 'pp-config-hint' }, t('config.unavailable'));
         }
 
-        /** Persist one field, leaving the other edits untouched. */
-        const save = (key: string, value: string): void => {
+        /**
+         * Persist one field, leaving the other edits untouched.
+         * @returns whether the write landed, so a caller holding its own draft
+         * state (the instructions textarea's `typing`) knows whether it is safe
+         * to drop that draft or must keep it for a retry.
+         */
+        const save = (key: string, value: string): Promise<boolean> => {
             setPhase('saving');
-            void form
+            return form
                 .mutate([{ op: 'set', path: [key], value }], snapshot.revision)
                 .then(written => {
                     setPhase(written ? 'idle' : 'failed');
+                    return written;
                 })
                 .catch(() => {
                     setPhase('failed');
+                    return false;
                 });
         };
 
@@ -277,7 +295,7 @@ export const ConfigPage = (
                       placeholder: t('config.effort.follow'),
                       disabled: busy,
                       onChange: next => {
-                          save(FIELD_EFFORT, next);
+                          void save(FIELD_EFFORT, next);
                       },
                   });
 
@@ -293,10 +311,21 @@ export const ConfigPage = (
             },
             onBlur: () => {
                 // Committed on blur so typing does not write on every keystroke.
-                if (typing !== undefined && typing !== accepted.instructions) {
-                    save(FIELD_INSTRUCTIONS, typing);
+                if (typing === undefined || typing === accepted.instructions) {
+                    setTyping(undefined);
+                    return;
                 }
-                setTyping(undefined);
+                // Dropping the local draft before the write lands would flash the
+                // still-stale accepted value back into the textarea, and would
+                // discard what the author typed for good if the write then fails.
+                // The draft is only cleared once the Host has actually accepted it.
+                const committed = typing;
+                void save(FIELD_INSTRUCTIONS, committed).then(written => {
+                    if (!aliveRef.current || !written) {
+                        return;
+                    }
+                    setTyping(current => (current === committed ? undefined : current));
+                });
             },
         });
 
