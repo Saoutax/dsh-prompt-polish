@@ -5,3 +5,10 @@ packages:
 # cannot run without it, so this is the one build script the workspace allows.
 allowBuilds:
     esbuild: true
+
+# @deepseek-ai/dsh-llm pins zod at an exact patched-but-vulnerable version
+# (GHSA: oversized constrained collections exhaust memory during validation).
+# Forcing the fixed patch release here needs no change to that peer's own
+# declared range.
+overrides:
+    zod@4.4.3: ^4.6.7
