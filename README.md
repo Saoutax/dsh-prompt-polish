@@ -8,6 +8,17 @@ A compact button sits in the composer toolbar beside the model selector. Click i
 and the current draft is rewritten in place; the button turns into an undo
 control for 8 seconds.
 
+## Installation
+
+The package is published on npm; the simplest path is the DSH CLI:
+
+```sh
+dsh plugin --profile web add @saoutax/dsh-prompt-polish
+```
+
+A released `.tgz` (see Releases below) or a local directory also work as the
+install target, for offline installs or development.
+
 ## Features
 
 - **In-place rewrite** - the draft is replaced with the polished text; nothing is
