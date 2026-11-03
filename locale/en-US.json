@@ -8,6 +8,7 @@
     "notice.empty": "Write a prompt before polishing it.",
     "notice.busy": "A message is being submitted; polish is unavailable until it settles.",
     "notice.unavailable": "No composer is open; polish is unavailable.",
+    "notice.changed": "The prompt changed while polishing; the rewrite was discarded to avoid overwriting it.",
     "config.summary.default": "Instructions: the packaged Markdown file",
     "config.summary.custom": "Instructions: custom text",
     "config.unavailable": "Configuration is not available yet; try again shortly.",

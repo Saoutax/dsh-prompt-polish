@@ -8,6 +8,7 @@
     "notice.empty": "请先输入提示词再优化。",
     "notice.busy": "消息正在提交，暂时无法优化。",
     "notice.unavailable": "当前没有打开的输入框，无法优化。",
+    "notice.changed": "优化过程中提示词发生了变化，为避免覆盖已丢弃本次优化结果。",
     "config.summary.default": "优化指令：使用内置 Markdown 文件",
     "config.summary.custom": "优化指令：使用自定义内容",
     "config.unavailable": "配置尚未就绪，请稍后重试。",

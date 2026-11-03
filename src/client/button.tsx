@@ -134,6 +134,18 @@ export const PolishButton = (
         const undoRef = React.useRef<UndoState | undefined>(undefined);
         const expiryRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
         const busyRef = React.useRef(false);
+        // Guards every async continuation below: once this flips to false, a
+        // still-settling request's `.then`/`.catch`/`.finally` must not touch
+        // React state or `inputActions` on a component that already unmounted.
+        const aliveRef = React.useRef(true);
+        // Owns the in-flight request's cancellation. A fresh request aborts
+        // whatever the previous one was still waiting on, and unmounting aborts
+        // the last one instead of leaving it to settle unobserved.
+        const controllerRef = React.useRef<AbortController | undefined>(undefined);
+        // Lets a settling request re-read the composer's current facts instead
+        // of the stale snapshot closed over when it was sent.
+        const latestRef = React.useRef<SnapshotSource>({ draft, occurrences, claim });
+        latestRef.current = { draft, occurrences, claim };
 
         // A switching session remounts this entry, so transient state starts
         // clean; no cross-session inheritance is possible or wanted.
@@ -141,12 +153,15 @@ export const PolishButton = (
             busyRef.current = false;
         }, [sessionId]);
 
-        // Unmounting closes the undo window: no timer outlives the composer.
+        // Unmounting closes the undo window and the in-flight request: no
+        // timer or pending promise outlives the composer it was serving.
         React.useEffect(
             () => () => {
+                aliveRef.current = false;
                 if (expiryRef.current !== undefined) {
                     clearTimeout(expiryRef.current);
                 }
+                controllerRef.current?.abort();
             },
             [],
         );
@@ -168,6 +183,10 @@ export const PolishButton = (
             if (canUndo) {
                 const saved = undoRef.current;
                 undoRef.current = undefined;
+                if (expiryRef.current !== undefined) {
+                    clearTimeout(expiryRef.current);
+                    expiryRef.current = undefined;
+                }
                 setUiPhase('idle');
                 if (saved !== undefined) {
                     inputActions.setDraft(saved.draft);
@@ -189,15 +208,38 @@ export const PolishButton = (
             busyRef.current = true;
             setUiPhase('busy');
 
+            // A fresh request replaces whatever the previous one was still
+            // waiting on; unmounting (see the cleanup effect above) aborts
+            // this one the same way.
+            controllerRef.current?.abort();
+            const controller = new AbortController();
+            controllerRef.current = controller;
+
             // Only the prose travels: the leading command token stays in the
             // draft and is not something the model should rewrite.
-            void callPolish(new AbortController().signal, sessionId, proseOf(target))
+            void callPolish(controller.signal, sessionId, proseOf(target))
                 .then(result => {
+                    if (!aliveRef.current) {
+                        return;
+                    }
                     if (!result.ok) {
                         setUiPhase('idle');
                         say(sessionId, 'error', `${t('error.prefix')}: ${result.message}`);
                         return;
                     }
+
+                    // The composer may have moved on while the request was in
+                    // flight. Rebuilding against the stale `target` snapshot
+                    // would silently overwrite whatever the author typed since
+                    // the request was sent, so the result is applied only when
+                    // the draft text is still the one that was sent.
+                    const latest = snapshotOf(latestRef.current);
+                    if (latest.text !== target.text) {
+                        setUiPhase('idle');
+                        say(sessionId, 'info', t('notice.changed'));
+                        return;
+                    }
+
                     const rebuilt = rebuildDraft(target, result.text);
                     if (rebuilt === undefined || rebuilt.text === target.text) {
                         // The rewrite matches the draft: nothing to apply, nothing to say.
@@ -219,6 +261,9 @@ export const PolishButton = (
                     }, undoWindowMs);
                 })
                 .catch((error: unknown) => {
+                    if (!aliveRef.current) {
+                        return;
+                    }
                     setUiPhase('idle');
                     say(
                         sessionId,
