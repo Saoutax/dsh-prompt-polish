@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Saoutax/dsh-prompt-polish/compare/v0.1.1...v0.1.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* add repository field for npm provenance ([5151ca5](https://github.com/Saoutax/dsh-prompt-polish/commit/5151ca5a92984ef134fe3cb8525b786e156d2634))
+
 ## [0.1.1](https://github.com/Saoutax/dsh-prompt-polish/compare/v0.1.0...v0.1.1) (2026-11-03)
 
 
