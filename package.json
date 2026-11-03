@@ -1,6 +1,6 @@
 {
     "name": "@saoutax/dsh-prompt-polish",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Polish the composer draft with AI from a composer-toolbar button.",
     "license": "MIT",
     "files": [
