@@ -3,6 +3,10 @@
     "version": "0.1.1",
     "description": "Polish the composer draft with AI from a composer-toolbar button.",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Saoutax/dsh-prompt-polish"
+    },
     "files": [
         "lib/index.js",
         "lib/client.js",
