@@ -1,0 +1,26 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["typescript", "unicorn", "oxc", "import"],
+    "env": {
+        "node": true,
+        "es2024": true
+    },
+    "categories": {
+        "correctness": "error",
+        "suspicious": "warn"
+    },
+    "rules": {
+        "typescript/no-floating-promises": "error",
+        "typescript/no-misused-promises": "error",
+        "typescript/await-thenable": "error",
+        "typescript/no-unnecessary-type-assertion": "warn",
+        "curly": "error",
+        "func-style": ["error", "expression"],
+        "import/exports-last": "error",
+        "import/group-exports": "error",
+        "import/no-duplicates": "error",
+        "no-duplicate-imports": "error",
+        "unicorn/prefer-at": "warn"
+    },
+    "ignorePatterns": ["lib/**", "node_modules/**", "pnpm-lock.yaml"]
+}

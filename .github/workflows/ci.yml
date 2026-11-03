@@ -1,0 +1,50 @@
+name: ci
+
+# Verification only: no publishing, no tags, no writes to the repository.
+# Runs for every pull request and for every push that lands on the main branch.
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+
+# A superseded run on the same ref is worthless, so cancel it.
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    check:
+        name: format, lint, typecheck, test, build
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - name: Check out the repository
+              uses: actions/checkout@v7
+
+            # Must precede setup-node: its `cache: pnpm` needs pnpm on PATH to
+            # resolve the store directory. The pnpm version itself comes from the
+            # `packageManager` field in package.json, so it is pinned in exactly
+            # one place and cannot drift from local development.
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+
+            - name: Install Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            # `--frozen-lockfile` fails instead of silently resolving a new
+            # dependency graph, so CI verifies the committed lockfile.
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # `check` is the same gate local development runs:
+            # oxfmt --check, oxlint --type-aware --type-check, all three tsc
+            # projects, the vitest suite, and the esbuild bundle.
+            - name: Verify
+              run: pnpm run check

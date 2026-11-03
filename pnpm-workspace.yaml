@@ -1,0 +1,7 @@
+packages:
+    - '.'
+
+# esbuild ships a postinstall that fetches its platform binary; the bundler
+# cannot run without it, so this is the one build script the workspace allows.
+allowBuilds:
+    esbuild: true

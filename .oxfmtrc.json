@@ -1,0 +1,18 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "printWidth": 100,
+    "tabWidth": 4,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "sortImports": {
+        "newlinesBetween": false
+    },
+    "sortPackageJson": {
+        "sortScripts": true
+    },
+    "arrowParens": "avoid",
+    "endOfLine": "lf",
+    "ignorePatterns": ["lib/**", "node_modules/**", "pnpm-lock.yaml", "icon.svg"]
+}

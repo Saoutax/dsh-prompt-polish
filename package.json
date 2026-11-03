@@ -1,0 +1,95 @@
+{
+    "name": "@saoutax/dsh-prompt-polish",
+    "version": "0.1.0",
+    "description": "Polish the composer draft with AI from a composer-toolbar button.",
+    "license": "MIT",
+    "files": [
+        "lib/index.js",
+        "lib/client.js",
+        "lib/prompts/**",
+        "cordis.patch.yml",
+        "locale/*.json",
+        "icon.svg"
+    ],
+    "type": "module",
+    "main": "lib/index.js",
+    "exports": {
+        ".": "./lib/index.js",
+        "./client": "./lib/client.js",
+        "./package.json": "./package.json",
+        "./locale/*.json": "./locale/*.json",
+        "./icon": "./icon.svg"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "node scripts/build.mjs",
+        "check": "pnpm run fmt:check && pnpm run lint:ci && pnpm run typecheck && pnpm run test && pnpm run build",
+        "fmt": "oxfmt",
+        "fmt:check": "oxfmt --check",
+        "lint": "oxlint",
+        "lint:ci": "oxlint --type-aware --type-check",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.client.json && tsc --noEmit -p tsconfig.test.json"
+    },
+    "dependencies": {
+        "lucide": "1.66.0"
+    },
+    "devDependencies": {
+        "@deepseek-ai/cordis": "4.0.5",
+        "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
+        "@deepseek-ai/dsh-llm": "0.2.1-rc.5",
+        "@deepseek-ai/dsh-session": "0.2.1-rc.5",
+        "@deepseek-ai/schemastery": "3.18.5",
+        "@types/node": "^22.10.2",
+        "@types/react": "^19.0.2",
+        "esbuild": "0.28.2",
+        "oxfmt": "0.75.0",
+        "oxlint": "1.90.0",
+        "oxlint-tsgolint": "7.0.2005",
+        "typescript": "5.7.2",
+        "vitest": "^3.2.7"
+    },
+    "peerDependencies": {
+        "@deepseek-ai/cordis": "^4.0.5",
+        "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5",
+        "@deepseek-ai/dsh-llm": ">=0.2.1-rc.5",
+        "@deepseek-ai/dsh-session": ">=0.2.1-rc.5",
+        "@deepseek-ai/schemastery": "^3.18.5"
+    },
+    "peerDependenciesMeta": {
+        "@deepseek-ai/cordis": {
+            "optional": true
+        },
+        "@deepseek-ai/dsh-agent": {
+            "optional": true
+        },
+        "@deepseek-ai/dsh-llm": {
+            "optional": true
+        },
+        "@deepseek-ai/dsh-session": {
+            "optional": true
+        },
+        "@deepseek-ai/schemastery": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "dsh": ">=0.2.1-rc.5",
+        "node": ">=22.19.0"
+    },
+    "packageManager": "pnpm@12.6.0",
+    "dsh": {
+        "bundle": {
+            "patch": "./cordis.patch.yml"
+        },
+        "client": {
+            "platform": "web",
+            "immediately": true,
+            "inject": [
+                "@deepseek-ai/dsh-client-ui-conversation"
+            ]
+        }
+    }
+}

@@ -1,0 +1,111 @@
+/*
+ * The composer toolbar button and the plugin's configuration page.
+ *
+ * Colors and states reference the host theme tokens (--dsw-alias-*), so both
+ * follow light/dark switching instead of hard-coding a look.
+ */
+
+.pp-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dsw-alias-label-secondary);
+    cursor: pointer;
+}
+
+.pp-button:hover:not(:disabled) {
+    background: var(--dsw-alias-bg-layer-2);
+    color: var(--dsw-alias-label-primary);
+}
+
+.pp-button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.pp-button[data-phase='undoable'] {
+    color: var(--dsw-alias-brand-primary);
+}
+
+.pp-button[data-phase='busy'] {
+    animation: pp-spin 1s linear infinite;
+}
+
+@keyframes pp-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Configuration page, rendered inside the Plugins page. */
+
+.pp-config {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 560px;
+}
+
+.pp-config-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pp-config-label {
+    color: var(--dsw-alias-label-primary);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+}
+
+.pp-config-hint {
+    margin: 0;
+    color: var(--dsw-alias-label-tertiary);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.pp-config-select,
+.pp-config-textarea {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid var(--dsw-alias-border-l2);
+    border-radius: var(--dsw-radius-sm);
+    background: var(--dsw-alias-bg-layer-1);
+    color: var(--dsw-alias-label-primary);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    padding: 6px 8px;
+}
+
+.pp-config-select:disabled,
+.pp-config-textarea:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.pp-config-textarea {
+    resize: vertical;
+    min-height: 96px;
+}
+
+.pp-config-select:focus-visible,
+.pp-config-textarea:focus-visible {
+    outline: 2px solid var(--dsw-alias-brand-primary);
+    outline-offset: 1px;
+}
+
+.pp-config-error {
+    margin: 0;
+    color: var(--dsw-alias-state-error-primary);
+    font-size: 12px;
+    line-height: 18px;
+}

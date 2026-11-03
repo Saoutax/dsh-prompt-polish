@@ -1,0 +1,12 @@
+{
+    // `cordis.patch.yml` uses the DSH/Cordis Loader patch dialect (`insert`,
+    // `override`, `group`, ...), not RFC 6902 JSON Patch. Some YAML extension
+    // versions auto-associate any `*.patch.yml` file with the JSON Patch
+    // schema by filename convention, which then flags this file's real
+    // structure as invalid. This mapping overrides that guess with no schema,
+    // so the editor stops validating this file against the wrong shape.
+    "yaml.schemas": {
+        "https://json.schemastore.org/json-patch.json": [],
+        "./.vscode/no-schema.json": ["cordis.patch.yml"]
+    }
+}

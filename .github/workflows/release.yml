@@ -1,0 +1,138 @@
+name: release
+
+# Version management and packaging for everything that lands on the main branch.
+#
+# release-please keeps a single "release PR" open: it accumulates the conventional
+# commits merged since the last tag and proposes the next version plus a CHANGELOG
+# entry. Merging that PR is what creates the tag and the GitHub Release. The
+# `publish` job then builds that exact tag and attaches the installable plugin
+# tarball to the Release.
+on:
+    push:
+        branches:
+            - main
+
+# Releases are strictly serial: two overlapping runs would race on the release PR.
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+    pull-requests: write
+    issues: write
+
+jobs:
+    release-please:
+        name: version and tag
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        outputs:
+            released: ${{ steps.release.outputs.release_created }}
+            tag: ${{ steps.release.outputs.tag_name }}
+        steps:
+            # `token` falls back to the workflow token, so the workflow works with
+            # no setup at all. Set a RELEASE_PLEASE_TOKEN secret (a PAT) to make
+            # GitHub run CI on the release PR too: pull requests opened with the
+            # default GITHUB_TOKEN do not trigger other workflows.
+            - name: Run release-please
+              id: release
+              uses: googleapis/release-please-action@v5
+              with:
+                  token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+                  config-file: release-please-config.json
+                  manifest-file: .release-please-manifest.json
+
+    publish:
+        name: build and attach the plugin package
+        needs: release-please
+        if: needs.release-please.outputs.released == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: write
+        steps:
+            # Build the tagged commit, not whatever main has moved on to, so the
+            # attached package matches the release exactly.
+            - name: Check out the released tag
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.release-please.outputs.tag }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+
+            - name: Install Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # `lib/` is generated and git-ignored, so the bundle must be rebuilt
+            # here; without this the tarball would carry no plugin at all.
+            - name: Build
+              run: pnpm run build
+
+            # A DSH bundle installs from a tarball (or a directory, or a git
+            # repository); the .tgz is the portable form of those.
+            - name: Pack
+              run: pnpm pack --pack-destination dist
+
+            - name: Verify the package carries both halves
+              run: ./scripts/verify-package.sh
+
+            - name: Attach the package to the release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  TAG: ${{ needs.release-please.outputs.tag }}
+              run: gh release upload "$TAG" dist/*.tgz --clobber
+
+    npm-publish:
+        name: publish to npm
+        needs: release-please
+        if: needs.release-please.outputs.released == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        # The `npm-publish` environment is where the trusted-publisher trust
+        # relationship is scoped on npmjs.com (org/user + repo + this exact
+        # workflow file + this environment name). No npm token exists anywhere:
+        # `id-token` lets npm CLI mint a short-lived OIDC credential instead.
+        environment: npm-publish
+        permissions:
+            id-token: write
+        steps:
+            - name: Check out the released tag
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.release-please.outputs.tag }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v6
+
+            - name: Install Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: pnpm
+                  registry-url: https://registry.npmjs.org
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # Trusted publishing needs npm CLI 11.5.1+; Node 24's bundled npm
+            # may be older, so it is pinned explicitly here rather than assumed.
+            - name: Update npm
+              run: npm install -g npm@latest
+
+            # `lib/` is generated and git-ignored, so the bundle must be rebuilt
+            # here, same as the `publish` job's own copy of this step.
+            - name: Build
+              run: pnpm run build
+
+            # No token, no `--provenance` flag: trusted publishing authenticates
+            # this exact workflow run via OIDC and attaches provenance by default.
+            - name: Publish to npm
+              run: npm publish --access public
