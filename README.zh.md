@@ -24,6 +24,8 @@ dsh plugin --profile web add @saoutax/dsh-prompt-polish
 - **命令草稿同样可优化** —— 以已认领命令 chip 开头的草稿（计划模式的 `/plan`、菜单选中的斜杠命令）与普通草稿一样可以优化：只改写命令 token 之后的正文，命令认领原样保留。只有 `/plan` chip 而没有任务正文时无内容可优化，按钮保持隐藏，输入任务后出现。
 - **模型可选** —— 在插件行配置 `provider` / `model`；留空则跟随当前会话的路由（含思考等级），再回落到部署默认模型。
 - **快捷键** —— Windows/Linux 为 `Ctrl+Shift+.`，macOS 为 `Cmd+Shift+.`，作用于当前聚焦会话的按钮动作。
+- **冷会话可用** —— 打开历史会话后可直接优化，插件会先恢复该会话，无需先发一条消息。
+- **临时错误提示** —— 失败信息显示在插件自己的浮层中，自动消失，切换会话不会重复弹出。
 
 ## 配置
 
@@ -64,7 +66,7 @@ pnpm run lint      # 语法 lint
 ```
 
 - `src/host/` 构建为 `lib/index.js`（ESM；Harness 包保持 external，运行时经 dsh 的 peer 解析拦截路由到安装目录）。
-- `src/client/` 构建为 `lib/client.js`，包装为 `window.__ModuleLoader__.load({ id, factory })` 注册调用；React 来自页面模块表，本包不内置。
+- `src/client/` 构建为 `lib/client.js`，包装为 `window.__ModuleLoader__.load({ id, factory })` 注册调用；React 与 ReactDOM 来自页面模块表，本包不内置。
 - lint 强制三条风格约束：导出置于文件末尾（`import/exports-last`）、语句大括号（`curly`）、函数表达式（`func-style`）。
 
 通过 harness 安装时以本目录为安装目标，或使用已发布的 `.tgz`（见下）。

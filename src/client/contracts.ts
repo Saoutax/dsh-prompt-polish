@@ -24,6 +24,11 @@ interface ReactLike {
     useCallback: <T extends (...args: never[]) => unknown>(fn: T, deps: readonly unknown[]) => T;
 }
 
+/** ReactDOM surface the module table hands over for portal rendering. */
+interface ReactDomLike {
+    createPortal(children: unknown, container: Element): unknown;
+}
+
 /** Snapshot selector hook the slot supplies. */
 type SelectorHook<T> = <R>(selector: (value: T) => R) => R;
 
@@ -90,16 +95,6 @@ interface EntryProps {
     readonly sessionId: string;
     readonly useInput: SelectorHook<InputState>;
     readonly inputActions: InputActionsLike;
-}
-
-/** Per-session input facade, resolved through the conversation service. */
-interface SessionInputLike {
-    notify(level: 'info' | 'error', text: string): void;
-}
-
-/** Session-scope Cordis context the conversation service resolves facades by. */
-interface ContextLike {
-    readonly [key: string]: unknown;
 }
 
 /** One reasoning effort a model advertises. */
@@ -197,14 +192,6 @@ interface ClientContext {
     readonly shortcuts: {
         register(command: Record<string, unknown>): () => void;
     };
-    readonly sessions: {
-        scope(sessionId: string): ContextLike | undefined;
-    };
-    readonly conversation: {
-        readonly input: {
-            for(actx: ContextLike): SessionInputLike;
-        };
-    };
     readonly remote: RemoteLike;
     readonly configForms: {
         get<T>(entryId: string): ConfigFormLike<T>;
@@ -223,6 +210,7 @@ type ButtonPhase = 'idle' | 'busy' | 'undoable';
 export type {
     ElementFactory,
     ReactLike,
+    ReactDomLike,
     SelectorHook,
     ButtonPhase,
     OccurrenceLike,
@@ -231,8 +219,6 @@ export type {
     InputActionsLike,
     DraftSnapshotLike,
     EntryProps,
-    SessionInputLike,
-    ContextLike,
     ClientContext,
     EffortLike,
     ModelLike,

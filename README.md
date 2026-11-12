@@ -24,6 +24,8 @@ A released `.tgz` (see Releases below) or a local directory also work as the ins
 - **Command drafts polish too** - a draft that opens with a claimed command chip (plan mode's `/plan`, a picked slash command) is polished like any other: only the prose after the token is rewritten, and the claim is carried through untouched. A `/plan` chip with no task text after it has nothing to polish, so the button stays hidden until you type the task.
 - **Model choice** - configure `provider` / `model` on the plugin row, or leave them empty to use the Session's own route, including its reasoning effort (falling back to the deployment default model).
 - **Shortcut** - `Ctrl+Shift+.` on Windows/Linux, `Cmd+Shift+.` on macOS, runs the focused conversation's button action.
+- **Cold sessions work** - opening a historical Session and polishing it resumes that Session first; no message has to be sent before the first polish.
+- **Transient errors** - failures appear in a plugin-owned toast that dismisses itself and never reappears when switching sessions.
 
 ## Configuration
 
@@ -49,7 +51,7 @@ pnpm run lint      # syntax lint
 ```
 
 - `src/host/` builds to `lib/index.js` (ESM; Harness packages stay external and resolve from the dsh installation at runtime through its peer-resolution interception).
-- `src/client/` builds to `lib/client.js`, wrapped as a `window.__ModuleLoader__.load({ id, factory })` registration; React comes from the page's module table, never from this package.
+- `src/client/` builds to `lib/client.js`, wrapped as a `window.__ModuleLoader__.load({ id, factory })` registration; React and ReactDOM come from the page's module table, never from this package.
 - Lint enforces three style rules: exports at the bottom of the file (`import/exports-last`), braced statements (`curly`), and function-expression style (`func-style`).
 
 Install from the harness with the bundle's directory as the install target, or with a released `.tgz` (see below).

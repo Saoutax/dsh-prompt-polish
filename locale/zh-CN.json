@@ -5,6 +5,8 @@
     "action.aria.polish": "用 AI 优化输入框中的提示词",
     "action.aria.undo": "恢复到优化前的提示词",
     "error.prefix": "提示词优化失败",
+    "error.no-session": "会话尚未就绪，无法优化。请先发送一条消息后再试。",
+    "error.transport": "优化服务不可用。请刷新页面后重试。",
     "notice.empty": "请先输入提示词再优化。",
     "notice.busy": "消息正在提交，暂时无法优化。",
     "notice.unavailable": "当前没有打开的输入框，无法优化。",

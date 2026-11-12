@@ -5,6 +5,8 @@
     "action.aria.polish": "Polish the prompt in the composer with AI",
     "action.aria.undo": "Restore the prompt from before polishing",
     "error.prefix": "Prompt polish failed",
+    "error.no-session": "This session is not ready for polishing. Send a message once, then try again.",
+    "error.transport": "The polish service is unavailable. Reload the page, then try again.",
     "notice.empty": "Write a prompt before polishing it.",
     "notice.busy": "A message is being submitted; polish is unavailable until it settles.",
     "notice.unavailable": "No composer is open; polish is unavailable.",

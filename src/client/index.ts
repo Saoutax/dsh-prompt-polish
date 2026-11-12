@@ -4,8 +4,9 @@
  * This entry wires the modules beside it: the button into the composer toolbar,
  * the keyboard binding, and the configuration page into the Plugins page. The
  * Host call lives in `bridge.ts`, the model catalog in `catalog.ts`, and the
- * dictionaries in `locale.ts`. Notices go through the composer's own channel,
- * so there is no bespoke banner surface here.
+ * dictionaries in `locale.ts`. Transient notices live in the button's own
+ * portal-rendered toast, so a Host-replayed composer notice cannot reappear
+ * after a session switch.
  *
  * @module @saoutax/dsh-prompt-polish/client
  */
@@ -14,7 +15,7 @@ import { DEFAULT_UNDO_WINDOW_MS } from '../shared.js';
 import { PolishButton } from './button.js';
 import { loadCatalog } from './catalog.js';
 import { ConfigPage } from './config-page.js';
-import type { ClientContext, PolishSettings, ReactLike } from './contracts.js';
+import type { ClientContext, PolishSettings, ReactDomLike, ReactLike } from './contracts.js';
 import { DICTS, LOCALE_NS } from './locale.js';
 import { registerShortcut } from './shortcut.js';
 import { registerStyles } from './styles.js';
@@ -59,15 +60,21 @@ const CONFIG_KEY = '@saoutax/dsh-prompt-polish';
  * and the stylesheet.
  * @param ctx - the client plugin context.
  * @param React - the React runtime from the module table.
+ * @param ReactDOM - the ReactDOM runtime used for the transient notice portal.
  * @param undoWindowMs - how long the undo state stays available.
  */
-const registerUi = (ctx: ClientContext, React: ReactLike, undoWindowMs: number): void => {
+const registerUi = (
+    ctx: ClientContext,
+    React: ReactLike,
+    ReactDOM: ReactDomLike | undefined,
+    undoWindowMs: number,
+): void => {
     const t = ctx.locale.bind(LOCALE_NS);
 
     registerStyles(ctx, stylesCss);
     ctx.effect(() => ctx.locale.register(LOCALE_NS, DICTS), 'prompt-polish: dictionaries');
 
-    const { Button, currentRun } = PolishButton(ctx, React, t, undoWindowMs);
+    const { Button, currentRun } = PolishButton(React, ReactDOM, t, undoWindowMs);
 
     ctx.slots.inject(BUTTON_SLOT, () =>
         ctx.slots.register({ name: BUTTON_SLOT, id: BUTTON_ID, order: CELL_ORDER }, Button),
@@ -95,11 +102,13 @@ const registerUi = (ctx: ClientContext, React: ReactLike, undoWindowMs: number):
 /**
  * Build the plugin object the Client module factory returns.
  * @param React - React runtime supplied by the host module table.
+ * @param ReactDOM - ReactDOM runtime used to portal the transient notice.
  * @param undoWindowMs - how long the undo state stays available.
  * @returns the Cordis client plugin.
  */
 export const createClientPlugin = (
     React: ReactLike,
+    ReactDOM: ReactDomLike | undefined,
     undoWindowMs: number = DEFAULT_UNDO_WINDOW_MS,
 ): {
     name: string;
@@ -108,18 +117,9 @@ export const createClientPlugin = (
 } => {
     return {
         name: 'prompt-polish-client',
-        inject: [
-            'slots',
-            'locale',
-            'shortcuts',
-            'sessions',
-            'conversation',
-            'remote',
-            'remote.session',
-            'configForms',
-        ],
+        inject: ['slots', 'locale', 'shortcuts', 'remote', 'remote.session', 'configForms'],
         apply: ctx => {
-            registerUi(ctx, React, undoWindowMs);
+            registerUi(ctx, React, ReactDOM, undoWindowMs);
         },
     };
 };

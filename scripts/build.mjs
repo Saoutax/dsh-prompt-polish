@@ -47,8 +47,8 @@ const CLIENT_GLOBAL = '__promptPolishBundle';
 /**
  * Build the browser half and wrap it in the module-table registration call.
  *
- * React is external: the module table seeds it, so the plugin must neither ship
- * a second copy nor depend on a particular React version.
+ * React and ReactDOM are external: the module table seeds them, so the plugin
+ * must neither ship a second copy nor depend on a particular React version.
  */
 const buildClient = async () => {
     const result = await build({
@@ -81,7 +81,8 @@ const buildClient = async () => {
   factory: (require) => {
 ${indent(body, '    ')}
     var React = require('react')
-    return ${CLIENT_GLOBAL}.createClientPlugin(React)
+    var ReactDOM = require('react-dom')
+    return ${CLIENT_GLOBAL}.createClientPlugin(React, ReactDOM)
   },
 })
 `;
