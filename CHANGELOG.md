@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3](https://github.com/Saoutax/dsh-prompt-polish/compare/v0.1.2...v0.1.3) (2026-11-12)
+
+
+### Bug Fixes
+
+* **client:** replace composer notices with transient toast ([a44fbfd](https://github.com/Saoutax/dsh-prompt-polish/commit/a44fbfda4e876c30398840b7e95f404804648a6a))
+* **host:** register route lazily and resume cold sessions ([c727d17](https://github.com/Saoutax/dsh-prompt-polish/commit/c727d173c6c868bd472dc17e95a5497e518ed958))
+
+
+### Documentation
+
+* optimize README.md ([17b26a9](https://github.com/Saoutax/dsh-prompt-polish/commit/17b26a917aa4739b501a59c3766b52ed850b935c))
+
 ## [0.1.2](https://github.com/Saoutax/dsh-prompt-polish/compare/v0.1.1...v0.1.2) (2026-11-03)
 
 
