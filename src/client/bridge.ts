@@ -10,16 +10,13 @@
  * @module @saoutax/dsh-prompt-polish/client/bridge
  */
 
-import type { PolishResult } from '../shared.js';
+import { POLISH_PATH, type PolishResult } from '../shared.js';
 
 /** Wire shape of a failed answer that is not the plugin's own result. */
 interface HttpErrorBody {
     readonly ok?: unknown;
     readonly error?: unknown;
 }
-
-/** Endpoint path registered by the Host half. */
-const POLISH_PATH = '/api/prompt-polish/polish';
 
 /**
  * Narrow an unknown value to the plugin's own result shape.
@@ -53,6 +50,7 @@ const asResult = (value: unknown): PolishResult | undefined => {
         reason:
             reason === 'empty' ||
             reason === 'too-long' ||
+            reason === 'no-session' ||
             reason === 'no-model' ||
             reason === 'no-instruction' ||
             reason === 'call-failed' ||

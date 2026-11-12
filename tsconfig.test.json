@@ -16,8 +16,10 @@
     "include": [
         "src/draft.ts",
         "src/host/config.ts",
+        "src/host/http.ts",
         "src/host/route.ts",
         "src/shared.ts",
+        "src/client/bridge.ts",
         "tests/**/*.ts"
     ]
 }

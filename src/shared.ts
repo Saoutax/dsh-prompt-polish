@@ -15,6 +15,8 @@ const POLISH_FAILURES = [
     'empty',
     /** The draft exceeded `maxInputChars`. */
     'too-long',
+    /** The calling Session could not be resolved to a live Agent. */
+    'no-session',
     /** No provider/model route could be resolved. */
     'no-model',
     /** The system instruction could not be resolved (packaged file missing or empty). */
@@ -59,6 +61,9 @@ const DEFAULT_MAX_OUTPUT_TOKENS = 2000;
 /** Milliseconds the composer button stays in its undo state after a replacement. */
 const DEFAULT_UNDO_WINDOW_MS = 8000;
 
+/** Endpoint path below `/api` shared by both halves so the route can never drift. */
+const POLISH_PATH = '/api/prompt-polish/polish';
+
 /** XML-ish delimiters that keep the draft separable from the instructions. */
 const DRAFT_OPEN = '<draft>';
 const DRAFT_CLOSE = '</draft>';
@@ -66,9 +71,10 @@ const DRAFT_CLOSE = '</draft>';
 /** The result contract and the failure union of one polish request. */
 export type { PolishFailure, PolishSuccess, PolishError, PolishResult };
 
-/** The tunable defaults and the draft delimiters shared by both halves. */
+/** The tunable defaults, the HTTP path, and the draft delimiters shared by both halves. */
 export {
     POLISH_FAILURES,
+    POLISH_PATH,
     DEFAULT_MAX_INPUT_CHARS,
     DEFAULT_MAX_OUTPUT_TOKENS,
     DEFAULT_UNDO_WINDOW_MS,
