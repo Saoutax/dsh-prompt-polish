@@ -2,68 +2,67 @@
 
 English | [简体中文](README.zh.md)
 
-A DeepSeek Harness plugin that polishes the composer prompt with AI.
+A DeepSeek Harness plugin that uses AI to polish the prompt in the composer.
 
-A compact button sits in the composer toolbar beside the model selector. Click it and the current draft is rewritten in place; the button turns into an undo control for 8 seconds.
+A compact button sits in the composer toolbar next to the model selector. Clicking it rewrites the current draft in place. For 8 seconds after the rewrite, the button becomes an undo control.
 
 ## Installation
 
-The package is published on npm; the simplest path is the DSH CLI:
+The package is published on npm. The easiest way to install it is the DSH CLI:
 
 ```sh
 dsh plugin --profile web add @saoutax/dsh-prompt-polish
 ```
 
-A released `.tgz` (see Releases below) or a local directory also work as the install target, for offline installs or development.
+You can also install from a released `.tgz` (see Releases below) or a local directory. These options are useful for offline installs and development.
 
 ## Features
 
-- **In-place rewrite** - the draft is replaced with the polished text; nothing is submitted to the Session, so no chat row is produced.
-- **One undo** - the pre-polish draft is kept for 8 seconds; clicking the button again restores it.
-- **Reference chips survive** - `@file` / `@session` chips are re-anchored into the rewritten text; chips the rewrite no longer mentions are appended instead of dropped.
-- **Command drafts polish too** - a draft that opens with a claimed command chip (plan mode's `/plan`, a picked slash command) is polished like any other: only the prose after the token is rewritten, and the claim is carried through untouched. A `/plan` chip with no task text after it has nothing to polish, so the button stays hidden until you type the task.
-- **Model choice** - configure `provider` / `model` on the plugin row, or leave them empty to use the Session's own route, including its reasoning effort (falling back to the deployment default model).
-- **Shortcut** - `Ctrl+Shift+.` on Windows/Linux, `Cmd+Shift+.` on macOS, runs the focused conversation's button action.
-- **Cold sessions work** - opening a historical Session and polishing it resumes that Session first; no message has to be sent before the first polish.
-- **Transient errors** - failures appear in a plugin-owned toast that dismisses itself and never reappears when switching sessions.
+- **In-place rewrite**: The draft is replaced with the polished text. Nothing is submitted to the Session, so no chat message is added.
+- **Undo**: The draft from before polishing is kept for 8 seconds. Clicking the button again restores it.
+- **Reference chips are preserved**: `@file` and `@session` chips are re-anchored in the rewritten text. Chips that the rewrite no longer mentions are appended to the end rather than dropped.
+- **Command drafts can be polished too**: A draft that starts with a claimed command chip (plan mode's `/plan`, a selected slash command) is polished like any other draft. Only the prose after the token is rewritten, and the claim is kept unchanged. A `/plan` chip with no task text after it has nothing to polish, so the button stays hidden until you type the task.
+- **Model selection**: Set `provider` and `model` on the plugin row, or leave them empty to use the Session's own route, including its reasoning effort. If the Session provides no route, the plugin falls back to the deployment's default model.
+- **Keyboard shortcut**: Use `Ctrl+Shift+.` on Windows or Linux, and `Cmd+Shift+.` on macOS, to run the focused conversation's button action.
+- **Sessions from history**: A Session opened from history can be polished directly. The plugin resumes that Session first, so you do not need to send a message before the first polish.
+- **Temporary error messages**: Failures appear in a temporary notification from the plugin. The notification closes automatically and does not appear again after you switch sessions.
 
 ## Configuration
 
 | Field             | Default                     | Meaning                                                    |
 | ----------------- | --------------------------- | ---------------------------------------------------------- |
-| `provider`        | `""`                        | Provider route for the rewrite; empty follows the Session. |
-| `model`           | `""`                        | Model id for the rewrite; empty follows the Session.       |
-| `instructions`    | empty → `prompts/polish.md` | System instruction defining what "polish" means.           |
+| `provider`        | `""`                        | Provider route for the rewrite. Empty follows the Session. |
+| `model`           | `""`                        | Model ID for the rewrite. Empty follows the Session.       |
+| `instructions`    | empty → `prompts/polish.md` | System instruction that defines what "polish" means.       |
 | `maxInputChars`   | `8000`                      | Longest draft a single rewrite accepts.                    |
-| `maxOutputTokens` | `2000`                      | Output tokens requested from the model.                    |
+| `maxOutputTokens` | `2000`                      | Maximum output tokens requested from the model.            |
 | `temperature`     | `0.3`                       | Sampling temperature.                                      |
 
-The default instruction lives only in `prompts/polish.md`; the build copies that file into the package, and the Host reads it at activation. There is no compiled-in copy to drift from it, so a package whose instruction file is missing or empty refuses to activate with an explicit error instead of silently running without its rules. Set `instructions` to override the file per plugin row.
+The default instruction exists only in `prompts/polish.md`. The build copies that file into the package, and the Host reads it when the plugin activates. The plugin does not include a compiled copy, so this file is the only definition of the default instruction. If the file is missing or empty, the plugin refuses to activate and reports an explicit error instead of running without its rules. Set `instructions` to override the default instruction for a plugin row.
 
 ## Development
 
 ```sh
 pnpm install
-pnpm run build     # bundle both halves + refresh icon.svg
-pnpm run check     # oxfmt + oxlint (type-aware) + tsc + build
+pnpm run build     # build both halves and refresh icon.svg
+pnpm run check     # oxfmt + type-aware oxlint + tsc + build
 pnpm run fmt       # format
 pnpm run lint      # syntax lint
 ```
 
-- `src/host/` builds to `lib/index.js` (ESM; Harness packages stay external and resolve from the dsh installation at runtime through its peer-resolution interception).
-- `src/client/` builds to `lib/client.js`, wrapped as a `window.__ModuleLoader__.load({ id, factory })` registration; React and ReactDOM come from the page's module table, never from this package.
-- Lint enforces three style rules: exports at the bottom of the file (`import/exports-last`), braced statements (`curly`), and function-expression style (`func-style`).
+- `src/host/` builds to `lib/index.js` (ESM). Harness packages are not bundled. At runtime, they are resolved from the dsh installation.
+- `src/client/` builds to `lib/client.js` and is wrapped as a `window.__ModuleLoader__.load({ id, factory })` registration. React and ReactDOM come from the page's module table and are not bundled into this package.
 
-Install from the harness with the bundle's directory as the install target, or with a released `.tgz` (see below).
+To install from the Harness, use the bundle's directory as the install target, or use a released `.tgz` (see below).
 
 ## Releases
 
-Every push to `main` is checked by CI and, on `main`, flows through an automated [release-please](https://github.com/googleapis/release-please) pipeline that versions, tags, and publishes the package to npm - no manual release steps.
+Every push to `main` runs the CI checks. On `main`, the automated [release-please](https://github.com/googleapis/release-please) pipeline versions, tags, and publishes the package to npm. No manual release steps are needed.
 
 ## Icons
 
-Toolbar and plugin icons are generated from [Lucide](https://lucide.dev) icon data (`sparkles`, `undo-2`, `loader-circle`) at build time. Lucide is licensed under the [ISC License](https://lucide.dev/license); the generated `icon.svg` and the in-app SVGs retain that provenance.
+Toolbar and plugin icons are generated at build time from [Lucide](https://lucide.dev) icon data (`sparkles`, `undo-2`, `loader-circle`). Lucide is licensed under the [ISC License](https://lucide.dev/license). The generated `icon.svg` and the in-app SVGs retain that attribution.
 
 ## License
 
-MIT for this plugin's own code; bundled Lucide artwork is ISC (see above).
+The plugin's own code is MIT. The bundled Lucide artwork is ISC (see above).
